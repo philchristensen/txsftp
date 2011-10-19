@@ -4,7 +4,7 @@
 	"access-log": "/dev/null",
 	"error-log": "",
 	
-	"db-url": "psycopg2://txsftp:moavmic7@localhost/txsftp",
+	"db-url": "psycopg2://txsftp:yuCrydCa@localhost/txsftp",
 	
 	"public-key": "id_rsa.pub",
 	"private-key": "id_rsa",

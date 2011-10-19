@@ -12,7 +12,7 @@ This module adds a 'txsftp' server type to the twistd service list.
 
 import os, warnings
 
-from zope.interface import classProvides, implements
+from zope.interface import classProvides
 
 from twisted import plugin
 from twisted.python import usage, log
@@ -22,18 +22,9 @@ from twisted.application import internet, service
 from twisted.conch.ssh.keys import Key
 from twisted.conch.ssh.factory import SSHFactory
 from twisted.conch.unix import UnixSSHRealm
-from twisted.cred.checkers import ICredentialsChecker
-from twisted.cred.credentials import IUsernamePassword
 from twisted.cred.portal import Portal
 
-from txsftp import conf
-
-class DummyChecker(object):
-	credentialInterfaces = (IUsernamePassword,)
-	implements(ICredentialsChecker)
-
-	def requestAvatarId(self, credentials):
-		return credentials.username
+from txsftp import conf, auth, dbapi
 
 class txsftp_plugin(object):
 	"""
@@ -68,7 +59,9 @@ class txsftp_plugin(object):
 		factory = SSHFactory()
 		factory.privateKeys = {'ssh-rsa': private_key}
 		factory.publicKeys = {'ssh-rsa': public_key}
-		factory.portal = Portal(UnixSSHRealm())
-		factory.portal.registerChecker(DummyChecker())
+
+		db = dbapi.connect(conf.get('db-url'))
+		factory.portal = Portal(auth.VirtualizedSSHRealm(db))
+		factory.portal.registerChecker(auth.Checker(db))
 
 		return internet.TCPServer(conf.get('sftp-port'), factory)
