@@ -1,0 +1,15 @@
+DROP TABLE IF EXISTS sftp_user;
+
+CREATE TABLE sftp_user (
+	id bigserial,
+	username varchar(255) NOT NULL,
+	password varchar(255) NOT NULL,
+	last_login timestamp,
+	last_logout timestamp,
+	PRIMARY KEY (id),
+	CONSTRAINT user_uniq UNIQUE(id)
+);
+CREATE INDEX sftp_user_username_key ON sftp_user (username);
+CREATE INDEX sftp_user_username_password_key ON sftp_user (username, password);
+
+INSERT INTO sftp_user (username, password) VALUES ('user', 'h5EjvIRjEyoA.');

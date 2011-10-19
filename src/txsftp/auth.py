@@ -8,13 +8,14 @@
 Virtualized SFTP user support.
 """
 
-import warnings
+import warnings, crypt
 
 from zope.interface import implements
 
 from twisted.python import log
+from twisted.internet import defer
 
-from twisted.cred import portal, checkers, credentials
+from twisted.cred import portal, checkers, credentials, error
 from twisted.conch import unix, avatar
 from twisted.conch.ssh import session, filetransfer
 
@@ -25,8 +26,13 @@ class Checker(object):
 	def __init__(self, db):
 		self.db = db
 	
+	@defer.inlineCallbacks
 	def requestAvatarId(self, credentials):
-		return credentials.username
+		result = yield self.db.runQuery('SELECT * FROM sftp_user WHERE username = %s', [credentials.username])
+		validate = lambda p: crypt.crypt(credentials.password, p[0:2]) == p
+		if(result and validate(result[0]['password'])):
+			defer.returnValue(credentials.username)
+		raise error.UnauthorizedLogin(credentials.username)
 
 class VirtualizedSSHRealm(unix.UnixSSHRealm):
 	implements(portal.IRealm)
