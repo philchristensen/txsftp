@@ -51,7 +51,9 @@ def autosetup():
 		zip_safe		= False,
 		
 		install_requires = ['%s%s' % x for x in {
-			'twisted'			: ">=10.1.0",
+			'twisted'			: ">=11.0",
+			'psycopg2'			: ">=2.4.1",
+			'simplejson'		: ">=2.1.1",
 		}.items()],
 		
 		# metadata for upload to PyPI

@@ -20,8 +20,8 @@ Running the Server
 Once you install Python and Twisted, the rest will be taken care of by
 the setuptools-based installer.
 
-    python setup.py install
-
+    pip install Twisted
+    pip install --editable .
 
 Next you should be able to start up the server with:
 
