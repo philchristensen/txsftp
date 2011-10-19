@@ -8,6 +8,8 @@
 Virtualized SFTP transfer support.
 """
 
+import os.path
+
 from twisted.conch import unix
 
 class VirtualizedSFTPServer(unix.SFTPServerForUnixConchUser):

@@ -25,10 +25,10 @@ from twisted.conch.ssh.factory import SSHFactory
 from twisted.conch import unix
 from twisted.cred.portal import Portal
 
-from txsftp import conf, auth, dbapi
+from txsftp import conf, auth, dbapi, server
 
 from twisted.python import components
-components.registerAdapter(unix.SFTPServerForUnixConchUser, auth.VirtualizedConchUser, filetransfer.ISFTPServer)
+components.registerAdapter(server.VirtualizedSFTPServer, auth.VirtualizedConchUser, filetransfer.ISFTPServer)
 
 class txsftp_plugin(object):
 	"""
