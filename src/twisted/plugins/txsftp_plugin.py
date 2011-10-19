@@ -19,12 +19,16 @@ from twisted.python import usage, log
 from twisted.internet import reactor
 from twisted.application import internet, service
 
+from twisted.conch.ssh import filetransfer
 from twisted.conch.ssh.keys import Key
 from twisted.conch.ssh.factory import SSHFactory
-from twisted.conch.unix import UnixSSHRealm
+from twisted.conch import unix
 from twisted.cred.portal import Portal
 
 from txsftp import conf, auth, dbapi
+
+from twisted.python import components
+components.registerAdapter(unix.SFTPServerForUnixConchUser, auth.VirtualizedConchUser, filetransfer.ISFTPServer)
 
 class txsftp_plugin(object):
 	"""
