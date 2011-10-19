@@ -1,0 +1,13 @@
+{
+	"sftp-port": 8888,
+	
+	"access-log": "/dev/null",
+	"error-log": "",
+	
+	"db-url": "psycopg2://txsftp:moavmic7@localhost/txsftp",
+	
+	"public-key": "id_rsa.pub",
+	"private-key": "id_rsa",
+	
+	"suppress-deprecation-warnings": false
+}

@@ -1,0 +1,4 @@
+*.pyc
+dropin.cache
+*.egg-info
+build
