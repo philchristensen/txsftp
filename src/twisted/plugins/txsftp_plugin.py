@@ -28,7 +28,7 @@ from twisted.cred.portal import Portal
 from txsftp import conf, auth, dbapi, server
 
 from twisted.python import components
-components.registerAdapter(server.VirtualizedSFTPServer, auth.VirtualizedConchUser, filetransfer.ISFTPServer)
+components.registerAdapter(server.RestrictedSFTPServer, auth.VirtualizedConchUser, filetransfer.ISFTPServer)
 
 class txsftp_plugin(object):
 	"""
