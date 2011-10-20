@@ -66,6 +66,7 @@ class txsftp_plugin(object):
 
 		db = dbapi.connect(conf.get('db-url'))
 		factory.portal = Portal(auth.VirtualizedSSHRealm(db))
-		factory.portal.registerChecker(auth.Checker(db))
+		factory.portal.registerChecker(auth.UsernamePasswordChecker(db))
+		factory.portal.registerChecker(auth.SSHKeyChecker(db))
 
 		return internet.TCPServer(conf.get('sftp-port'), factory)

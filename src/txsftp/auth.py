@@ -8,7 +8,7 @@
 Virtualized SFTP user support.
 """
 
-import warnings, crypt
+import warnings, crypt, base64, binascii
 
 from zope.interface import implements
 
@@ -17,9 +17,10 @@ from twisted.internet import defer
 
 from twisted.cred import portal, checkers, credentials, error
 from twisted.conch import unix, avatar
-from twisted.conch.ssh import session, filetransfer
+from twisted.conch.error import ValidPublicKey
+from twisted.conch.ssh import session, filetransfer, keys
 
-class Checker(object):
+class UsernamePasswordChecker(object):
 	credentialInterfaces = (credentials.IUsernamePassword,)
 	implements(checkers.ICredentialsChecker)
 	
@@ -32,7 +33,34 @@ class Checker(object):
 		validate = lambda p: crypt.crypt(credentials.password, p[0:2]) == p
 		if(result and validate(result[0]['password'])):
 			defer.returnValue(credentials.username)
-		raise error.UnauthorizedLogin(credentials.username)
+		raise error.UnauthorizedLogin('Invalid login.')
+
+class SSHKeyChecker(object):
+	"""
+	Checker that authenticates against SSH keys in the database.
+	"""
+	
+	credentialInterfaces = (credentials.ISSHPrivateKey,)
+	implements(checkers.ICredentialsChecker)
+	
+	def __init__(self, db):
+		self.db = db
+	
+	@defer.inlineCallbacks
+	def requestAvatarId(self, credentials):
+		if not credentials.signature:
+			raise ValidPublicKey()
+		
+		if keys.Key.fromString(credentials.blob).verify(credentials.signature, credentials.sigData):
+			result = yield self.db.runQuery('SELECT * FROM sftp_user WHERE username = %s', [credentials.username])
+			try:
+				if(base64.decodestring(result[0]['public_key'].split()[1]) == credentials.blob):
+					defer.returnValue(credentials.username)
+			except binascii.Error, e:
+				log.err("Couldn't decode public_key on file for %s: %s" % (credentials.username, e))
+				raise error.UnauthorizedLogin("invalid key")
+		raise error.UnauthorizedLogin("unable to verify key")
+
 
 class VirtualizedSSHRealm(unix.UnixSSHRealm):
 	implements(portal.IRealm)

@@ -1,15 +1,171 @@
-DROP TABLE IF EXISTS sftp_user;
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = off;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET escape_string_warning = off;
+
+SET search_path = public, pg_catalog;
+
+DROP INDEX public.sftp_user_username_password_key;
+DROP INDEX public.sftp_user_username_key;
+ALTER TABLE ONLY public.sftp_user DROP CONSTRAINT user_uniq;
+ALTER TABLE public.sftp_user ALTER COLUMN id DROP DEFAULT;
+DROP SEQUENCE public.sftp_user_id_seq;
+DROP TABLE public.sftp_user;
+DROP PROCEDURAL LANGUAGE plpgsql;
+DROP SCHEMA public;
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA public;
+
+
+ALTER SCHEMA public OWNER TO postgres;
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: postgres
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+--
+-- Name: plpgsql; Type: PROCEDURAL LANGUAGE; Schema: -; Owner: postgres
+--
+
+CREATE OR REPLACE PROCEDURAL LANGUAGE plpgsql;
+
+
+ALTER PROCEDURAL LANGUAGE plpgsql OWNER TO postgres;
+
+SET search_path = public, pg_catalog;
+
+SET default_with_oids = false;
+
+--
+-- Name: sftp_user; Type: TABLE; Schema: public; Owner: txsftp
+--
 
 CREATE TABLE sftp_user (
-	id bigserial,
-	username varchar(255) NOT NULL,
-	password varchar(255) NOT NULL,
-	last_login timestamp,
-	last_logout timestamp,
-	PRIMARY KEY (id),
-	CONSTRAINT user_uniq UNIQUE(id)
+    id bigint NOT NULL,
+    username character varying(255) NOT NULL,
+    password character varying(255) NOT NULL,
+    private_key text,
+    public_key text,
+    last_login timestamp without time zone,
+    last_logout timestamp without time zone
 );
-CREATE INDEX sftp_user_username_key ON sftp_user (username);
-CREATE INDEX sftp_user_username_password_key ON sftp_user (username, password);
 
-INSERT INTO sftp_user (username, password) VALUES ('user', 'h5EjvIRjEyoA.');
+
+ALTER TABLE public.sftp_user OWNER TO txsftp;
+
+--
+-- Name: sftp_user_id_seq; Type: SEQUENCE; Schema: public; Owner: txsftp
+--
+
+CREATE SEQUENCE sftp_user_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.sftp_user_id_seq OWNER TO txsftp;
+
+--
+-- Name: sftp_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: txsftp
+--
+
+ALTER SEQUENCE sftp_user_id_seq OWNED BY sftp_user.id;
+
+
+--
+-- Name: sftp_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: txsftp
+--
+
+SELECT pg_catalog.setval('sftp_user_id_seq', 1, true);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: txsftp
+--
+
+ALTER TABLE sftp_user ALTER COLUMN id SET DEFAULT nextval('sftp_user_id_seq'::regclass);
+
+
+--
+-- Data for Name: sftp_user; Type: TABLE DATA; Schema: public; Owner: txsftp
+--
+
+INSERT INTO sftp_user (id, username, password, private_key, public_key, last_login, last_logout) VALUES (1, 'user', 'h5EjvIRjEyoA.', '-----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEAuGOWSZR9xSbbrQrHKu7vexKajDvubtMK0PTxTak1ItL02ARN
+kgb4t713FzWUEr1wchXAeY6gXIqnsFr7NCzROEcJ/gJQ8nzJE7LETTOxC+7YNKYI
+mYMVepQP74NPuoQxntp/fx9ambT/wyKZngX9A2UEPgHtQDa5iE8GxmEmP61bHZE/
+JYdN0S/TTZ3XsQ44uJz/dfN0xYr11FVK/4YvBc63hj/fIiVQCgAFIrtQ+g8GwuN5
+hAmoALE9k60A5xK1SUdyRHN72NOjUO0w6bXBe4RbTrKiYe2ZytViQC2RbvZvqeJI
+83jAsXqxz9gpYMpp4XleE7HC8tLBih+5pN6wYQIBIwKCAQBkGM3tbd3gDce1tWTO
+Ke+31uYu3rSij9Kr8q7hBBWH7tyvx9JWlhH9WDlVvf/s6n7e2Juvs9Nlb9dfvFx7
+aMlZEJ8GO8WK80iVqjAMpwhW719tCazlnu5nHS044OIjbFVzfe1w5SKN9IrXpRGQ
+TGTHVBg+6xpkr/5RT3i01acMnwNoMcTtCw79T7AGAWQhTpCFMFIxFHfuYfj47Jgn
+Jvm+oud6i5EnxXGVB3idVerNqPUxTC+DH72oSmXgaV7uuVAI3Gp3nX5JIlggJDMd
+ViI8mdlpveGglDXupOov2e33hhVZTxvqqtAqNe8KrHMXBR7WG91U0c4FStlaQCmD
+5HeLAoGBAOVCBDalpRRRQRhX/D8kv0Lj9yT2K+ntyqx7XFegPKPIKUTle2gia3fJ
+tLNA0W17uQJcHB3j3AwBoICoPELvTtz8CvfWrsjGt3kc6/HZS0IABc2N7WgYDhRP
+cZY3yDpLiR3CI61OhocwsCaMDLusrqgFy13pKvIL4E7qeyrjLsZBAoGBAM3luBcB
+HrIZGJGnMz5p5qg9na7iACcuGUjRy9sXKir5a+Mq0NdlnvmMFSLbCEBvRzNB3LNC
+2DEnX0Se5Iha9TdlVZtbh6IEpwEhN9Nule+SmQq6nVdKfajeur5R7tasTec1wRdg
+dDNN+2ciqLSkpokN5nXsmItI/MdKO9Z94qIhAoGBALDbJ9JihqlF/wQmngTTNHVu
+B8wOXGQAlQi273bMEYWpCeSxB22W5TCFqKeJxiFCL6K8FbCodozrT+44o4QXsd2s
+fX1ceDR8CeEWT51P2vhmauBmLCu6yQhaitL31PnFPePBpn5hJfNC0QfLH8P6PZeP
+cP9NeOabcoYFV7NezE/LAoGBAMIhvDLybWYXqXNjIa/gMT+KjVu/JLc6F9bxsZQO
+htgPvX5qMp8z7al1cwObUOxLqYgZhvIpFPslH09T/AuI9dUlB5J63vfYgDRD5C3A
+CbX/P9bqdxfJ5DGBi4A+n1yxFkBl4fF4MwvNLt2VtQIXlbRsMRAZlyQ9gJ6lE9jd
+F4LrAoGAKa0iS0tKJhC7LlxKxTFEus8vv5O5nx252w6z9mOkihmBdk4hSP3oiVFR
+SNXFHJTJnmb6lzbozrNX62Fao/pH92pbxH/AyxpDC2CRXYt9tGFFOEwXqQ+B0XFh
+ZWBB1wyNoIsDtPliodttcd9M9e1nLKv5IAOXmncIHI0R0wIy3UE=
+-----END RSA PRIVATE KEY-----', 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAuGOWSZR9xSbbrQrHKu7vexKajDvubtMK0PTxTak1ItL02ARNkgb4t713FzWUEr1wchXAeY6gXIqnsFr7NCzROEcJ/gJQ8nzJE7LETTOxC+7YNKYImYMVepQP74NPuoQxntp/fx9ambT/wyKZngX9A2UEPgHtQDa5iE8GxmEmP61bHZE/JYdN0S/TTZ3XsQ44uJz/dfN0xYr11FVK/4YvBc63hj/fIiVQCgAFIrtQ+g8GwuN5hAmoALE9k60A5xK1SUdyRHN72NOjUO0w6bXBe4RbTrKiYe2ZytViQC2RbvZvqeJI83jAsXqxz9gpYMpp4XleE7HC8tLBih+5pN6wYQ== phil@megatron.bubblehouse.org', NULL, NULL);
+
+
+--
+-- Name: user_uniq; Type: CONSTRAINT; Schema: public; Owner: txsftp
+--
+
+ALTER TABLE ONLY sftp_user
+    ADD CONSTRAINT user_uniq PRIMARY KEY (id);
+
+
+--
+-- Name: sftp_user_username_key; Type: INDEX; Schema: public; Owner: txsftp
+--
+
+CREATE INDEX sftp_user_username_key ON sftp_user USING btree (username);
+
+
+--
+-- Name: sftp_user_username_password_key; Type: INDEX; Schema: public; Owner: txsftp
+--
+
+CREATE INDEX sftp_user_username_password_key ON sftp_user USING btree (username, password);
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
