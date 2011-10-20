@@ -68,14 +68,16 @@ class VirtualizedSSHRealm(unix.UnixSSHRealm):
 	def __init__(self, db):
 		self.db = db
 	
+	@defer.inlineCallbacks
 	def requestAvatar(self, username, mind, *interfaces):
-		user = VirtualizedConchUser(username)
-		return interfaces[0], user, user.logout
+		result = yield self.db.runQuery('SELECT * FROM sftp_user WHERE username = %s', [username])
+		user = VirtualizedConchUser(**result[0])
+		defer.returnValue((interfaces[0], user, user.logout))
 
 class VirtualizedConchUser(avatar.ConchUser):
-	def __init__(self, username):
+	def __init__(self, **attribs):
 		avatar.ConchUser.__init__(self)
-		self.username = username
+		self.attribs = attribs
 		self.channelLookup.update({"session": session.SSHSession})
 		self.subsystemLookup.update({"sftp": filetransfer.FileTransferServer})
 	
@@ -86,22 +88,19 @@ class VirtualizedConchUser(avatar.ConchUser):
 		raise RuntimeError('getOtherGroups not implemented')
 	
 	def getHomeDir(self):
-		warnings.warn('getHomeDir not implemented')
-		return '/Users/phil/Workspace/txsftp'
+		return self.attribs['home_directory']
 	
 	def getShell(self):
 		raise RuntimeError('getShell not implemented')
 	
 	def global_tcpip_forward(self, data):
-		warnings.warn('global_tcpip_forward, not implemented')
 		return 0
 	
 	def global_cancel_tcpip_forward(self, data):
-		warnings.warn('global_cancel_tcpip_forward not implemented')
 		return 0
 	
 	def logout(self):
-		log.msg('avatar %s logging out' % self.username)
+		log.msg('avatar %s logging out' % self.attribs['username'])
 	
 	def _runAsUser(self, f, *args, **kw):
 		warnings.warn('_runAsUser not implemented')

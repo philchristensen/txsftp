@@ -58,6 +58,7 @@ CREATE TABLE sftp_user (
     password character varying(255) NOT NULL,
     private_key text,
     public_key text,
+    home_directory character varying(255) NOT NULL,
     last_login timestamp without time zone,
     last_logout timestamp without time zone
 );
@@ -104,7 +105,7 @@ ALTER TABLE sftp_user ALTER COLUMN id SET DEFAULT nextval('sftp_user_id_seq'::re
 -- Data for Name: sftp_user; Type: TABLE DATA; Schema: public; Owner: txsftp
 --
 
-INSERT INTO sftp_user (id, username, password, private_key, public_key, last_login, last_logout) VALUES (1, 'user', 'h5EjvIRjEyoA.', '-----BEGIN RSA PRIVATE KEY-----
+INSERT INTO sftp_user (id, username, password, private_key, public_key, home_directory, last_login, last_logout) VALUES (1, 'user', 'h5EjvIRjEyoA.', '-----BEGIN RSA PRIVATE KEY-----
 MIIEogIBAAKCAQEAuGOWSZR9xSbbrQrHKu7vexKajDvubtMK0PTxTak1ItL02ARN
 kgb4t713FzWUEr1wchXAeY6gXIqnsFr7NCzROEcJ/gJQ8nzJE7LETTOxC+7YNKYI
 mYMVepQP74NPuoQxntp/fx9ambT/wyKZngX9A2UEPgHtQDa5iE8GxmEmP61bHZE/
@@ -130,7 +131,7 @@ CbX/P9bqdxfJ5DGBi4A+n1yxFkBl4fF4MwvNLt2VtQIXlbRsMRAZlyQ9gJ6lE9jd
 F4LrAoGAKa0iS0tKJhC7LlxKxTFEus8vv5O5nx252w6z9mOkihmBdk4hSP3oiVFR
 SNXFHJTJnmb6lzbozrNX62Fao/pH92pbxH/AyxpDC2CRXYt9tGFFOEwXqQ+B0XFh
 ZWBB1wyNoIsDtPliodttcd9M9e1nLKv5IAOXmncIHI0R0wIy3UE=
------END RSA PRIVATE KEY-----', 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAuGOWSZR9xSbbrQrHKu7vexKajDvubtMK0PTxTak1ItL02ARNkgb4t713FzWUEr1wchXAeY6gXIqnsFr7NCzROEcJ/gJQ8nzJE7LETTOxC+7YNKYImYMVepQP74NPuoQxntp/fx9ambT/wyKZngX9A2UEPgHtQDa5iE8GxmEmP61bHZE/JYdN0S/TTZ3XsQ44uJz/dfN0xYr11FVK/4YvBc63hj/fIiVQCgAFIrtQ+g8GwuN5hAmoALE9k60A5xK1SUdyRHN72NOjUO0w6bXBe4RbTrKiYe2ZytViQC2RbvZvqeJI83jAsXqxz9gpYMpp4XleE7HC8tLBih+5pN6wYQ== phil@megatron.bubblehouse.org', NULL, NULL);
+-----END RSA PRIVATE KEY-----', 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAuGOWSZR9xSbbrQrHKu7vexKajDvubtMK0PTxTak1ItL02ARNkgb4t713FzWUEr1wchXAeY6gXIqnsFr7NCzROEcJ/gJQ8nzJE7LETTOxC+7YNKYImYMVepQP74NPuoQxntp/fx9ambT/wyKZngX9A2UEPgHtQDa5iE8GxmEmP61bHZE/JYdN0S/TTZ3XsQ44uJz/dfN0xYr11FVK/4YvBc63hj/fIiVQCgAFIrtQ+g8GwuN5hAmoALE9k60A5xK1SUdyRHN72NOjUO0w6bXBe4RbTrKiYe2ZytViQC2RbvZvqeJI83jAsXqxz9gpYMpp4XleE7HC8tLBih+5pN6wYQ== phil@megatron.bubblehouse.org', '/Users/phil', NULL, NULL);
 
 
 --
