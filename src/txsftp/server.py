@@ -18,21 +18,27 @@ from twisted.conch import unix
 from twisted.conch.ssh import filetransfer
 from twisted.python.filepath import FilePath, InsecurePath
 
-class SmartUnixSFTPFile(unix.UnixSFTPFile):
+class EventedUnixSFTPFile(unix.UnixSFTPFile):
 	"""
 	Detect events and notify the server.
 	"""
 	def __init__(self, server, filename, flags, attrs):
 		unix.UnixSFTPFile.__init__(self, server, filename, flags, attrs)
 		self.filename = filename
+		self.flags = flags
+		self.attrs = attrs
 		self.server.handleEvent('open', dict(
-			filename	= self.filename
+			filename	= filename,
+			flags		= flags,
+			attrs		= attrs,
 		))
 	
 	def close(self):
 		unix.UnixSFTPFile.close(self)
 		self.server.handleEvent('close', dict(
-			filename	= self.filename
+			filename	= self.filename,
+			flags		= self.flags,
+			attrs		= self.attrs,
 		))
 	
 	def writeChunk(self, offset, data):
@@ -44,12 +50,13 @@ class SmartUnixSFTPFile(unix.UnixSFTPFile):
 		))
 	
 	def readChunk(self, offset, length):
-		unix.UnixSFTPFile.readChunk(self)
+		result = unix.UnixSFTPFile.readChunk(self, offset, length)
 		self.server.handleEvent('readChunk', dict(
 			filename	= self.filename,
 			offeset		= offset,
 			length		= length,
 		))
+		return result
 
 class AbstractEventedFileTransferServer(filetransfer.FileTransferServer):
 	def __init__(self, data=None, avatar=None):
@@ -105,8 +112,7 @@ class RestrictedSFTPServer:
 		raise NotImplementedError
 	
 	def openFile(self, filename, flags, attrs):
-		return SmartUnixSFTPFile(self, self._childPath(filename).path, flags,
-				attrs)
+		return EventedUnixSFTPFile(self, self._childPath(filename).path, flags, attrs)
 
 	def removeFile(self, filename):
 		self._childPath(filename).remove()
