@@ -57,12 +57,12 @@ class txsftp_plugin(object):
 			warnings.filterwarnings('ignore', r'.*', DeprecationWarning)
 		
 		get_key = lambda path: Key.fromString(data=open(path).read())
-		public_key = get_key(conf.get('public-key'))
-		private_key = get_key(conf.get('private-key'))
+		ssh_public_key = get_key(conf.get('ssh-public-key'))
+		ssh_private_key = get_key(conf.get('ssh-private-key'))
 
 		factory = SSHFactory()
-		factory.privateKeys = {'ssh-rsa': private_key}
-		factory.publicKeys = {'ssh-rsa': public_key}
+		factory.privateKeys = {'ssh-rsa': ssh_private_key}
+		factory.publicKeys = {'ssh-rsa': ssh_public_key}
 
 		db = dbapi.connect(conf.get('db-url'))
 		factory.portal = Portal(auth.VirtualizedSSHRealm(db))

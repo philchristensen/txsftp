@@ -55,9 +55,9 @@ SET default_with_oids = false;
 CREATE TABLE sftp_user (
     id bigint NOT NULL,
     username character varying(255) NOT NULL,
-    password character varying(255) NOT NULL,
-    private_key text,
-    public_key text,
+    password character varying(255),
+    gpg_public_key text,
+    ssh_public_key text,
     home_directory character varying(255) NOT NULL,
     last_login timestamp without time zone,
     last_logout timestamp without time zone
@@ -105,7 +105,7 @@ ALTER TABLE sftp_user ALTER COLUMN id SET DEFAULT nextval('sftp_user_id_seq'::re
 -- Data for Name: sftp_user; Type: TABLE DATA; Schema: public; Owner: txsftp
 --
 
-INSERT INTO sftp_user (id, username, password, private_key, public_key, home_directory, last_login, last_logout) VALUES (1, 'user', 'h5EjvIRjEyoA.', '-----BEGIN RSA PRIVATE KEY-----
+INSERT INTO sftp_user (id, username, password, gpg_public_key, ssh_public_key, home_directory, last_login, last_logout) VALUES (1, 'user', 'h5EjvIRjEyoA.', '-----BEGIN RSA PRIVATE KEY-----
 MIIEogIBAAKCAQEAuGOWSZR9xSbbrQrHKu7vexKajDvubtMK0PTxTak1ItL02ARN
 kgb4t713FzWUEr1wchXAeY6gXIqnsFr7NCzROEcJ/gJQ8nzJE7LETTOxC+7YNKYI
 mYMVepQP74NPuoQxntp/fx9ambT/wyKZngX9A2UEPgHtQDa5iE8GxmEmP61bHZE/

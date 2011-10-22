@@ -1,7 +1,11 @@
+# txsftp
+# Copyright (c) 2011 Phil Christensen
 # Copyright (c) 2005 Canonical Ltd.
-# See Twisted's LICENSE for details.
+#
+# See LICENSE for details
 
-"""A restricted chroot-like SFTP backend.
+"""
+A restricted chroot-like SFTP backend.
 
 It presents the user with a virtual filesystem rooted at their home directory,
 and they can't break out of it.
@@ -14,8 +18,51 @@ from twisted.conch import unix
 from twisted.conch.ssh import filetransfer
 from twisted.python.filepath import FilePath, InsecurePath
 
+class SmartUnixSFTPFile(unix.UnixSFTPFile):
+	"""
+	Detect events and notify the server.
+	"""
+	def __init__(self, server, filename, flags, attrs):
+		unix.UnixSFTPFile.__init__(self, server, filename, flags, attrs)
+		self.filename = filename
+		self.server.handleEvent('open', dict(
+			filename	= self.filename
+		))
+	
+	def close(self):
+		unix.UnixSFTPFile.close(self)
+		self.server.handleEvent('close', dict(
+			filename	= self.filename
+		))
+	
+	def writeChunk(self, offset, data):
+		unix.UnixSFTPFile.writeChunk(self, offset, data)
+		self.server.handleEvent('writeChunk', dict(
+			filename	= self.filename,
+			offset		= offset,
+			data		= data,
+		))
+	
+	def readChunk(self, offset, length):
+		unix.UnixSFTPFile.readChunk(self)
+		self.server.handleEvent('readChunk', dict(
+			filename	= self.filename,
+			offeset		= offset,
+			length		= length,
+		))
+
+class AbstractEventedFileTransferServer(filetransfer.FileTransferServer):
+	def __init__(self, data=None, avatar=None):
+		filetransfer.FileTransferServer.__init__(self, data, avatar)
+		for event, listener in self.getListenerDict().items():
+			self.client.addListener(event, listener)
+	
+	def getListenerDict(self):
+		raise NotImplementedError('AbstractEventedFileTransferServer::getListeners()')
+
 class RestrictedSFTPServer:
-	"""This is much like unix.SFTPServerForUnixConchUser, but:
+	"""
+	This is much like unix.SFTPServerForUnixConchUser, but:
 		- doesn't allow any traversal above the home directory
 		- uid/gid can't be set
 		- symlinks cannot be made
@@ -27,6 +74,7 @@ class RestrictedSFTPServer:
 	implements(filetransfer.ISFTPServer)
 
 	def __init__(self, avatar):
+		self.listeners = {}
 		self.avatar = avatar
 		self.homedir = FilePath(self.avatar.getHomeDir())
 		# Make the home dir if it doesn't already exist
@@ -35,6 +83,13 @@ class RestrictedSFTPServer:
 		except OSError, e:
 			if e.errno != errno.EEXIST:
 				raise
+
+	def addListener(self, event, listener):
+		self.listeners.setdefault(event, []).append(listener)
+
+	def handleEvent(self, event, data):
+		for listener in self.listeners.get(event, []):
+			listener(event, data)
 
 	def _childPath(self, path):
 		if path.startswith('/'):
@@ -50,7 +105,7 @@ class RestrictedSFTPServer:
 		raise NotImplementedError
 	
 	def openFile(self, filename, flags, attrs):
-		return unix.UnixSFTPFile(self, self._childPath(filename).path, flags,
+		return SmartUnixSFTPFile(self, self._childPath(filename).path, flags,
 				attrs)
 
 	def removeFile(self, filename):

@@ -12,13 +12,15 @@ import warnings, crypt, base64, binascii
 
 from zope.interface import implements
 
-from twisted.python import log
+from twisted.python import log, reflect
 from twisted.internet import defer
 
 from twisted.cred import portal, checkers, credentials, error
 from twisted.conch import unix, avatar
 from twisted.conch.error import ValidPublicKey
 from twisted.conch.ssh import session, filetransfer, keys
+
+from txsftp import conf
 
 class UsernamePasswordChecker(object):
 	credentialInterfaces = (credentials.IUsernamePassword,)
@@ -54,10 +56,10 @@ class SSHKeyChecker(object):
 		if keys.Key.fromString(credentials.blob).verify(credentials.signature, credentials.sigData):
 			result = yield self.db.runQuery('SELECT * FROM sftp_user WHERE username = %s', [credentials.username])
 			try:
-				if(base64.decodestring(result[0]['public_key'].split()[1]) == credentials.blob):
+				if(base64.decodestring(result[0]['ssh_public_key'].split()[1]) == credentials.blob):
 					defer.returnValue(credentials.username)
 			except binascii.Error, e:
-				log.err("Couldn't decode public_key on file for %s: %s" % (credentials.username, e))
+				log.err("Couldn't decode ssh_public_key on file for %s: %s" % (credentials.username, e))
 				raise error.UnauthorizedLogin("invalid key")
 		raise error.UnauthorizedLogin("unable to verify key")
 
@@ -79,7 +81,13 @@ class VirtualizedConchUser(avatar.ConchUser):
 		avatar.ConchUser.__init__(self)
 		self.attribs = attribs
 		self.channelLookup.update({"session": session.SSHSession})
-		self.subsystemLookup.update({"sftp": filetransfer.FileTransferServer})
+		
+		server_class = conf.get('server-class')
+		if(server_class and server_class != 'default'):
+			server_class = reflect.namedAny(server_class)
+			self.subsystemLookup.update({"sftp": server_class})
+		else:
+			self.subsystemLookup.update({"sftp": filetransfer.FileTransferServer})
 	
 	def getUserGroupId(self):
 		raise RuntimeError('getUserGroupId not implemented')

@@ -1,13 +1,14 @@
 {
 	"sftp-port": 8888,
+	"server-class": "txsftp.gpg.GPGFileTransferServer",
 	
 	"access-log": "/dev/null",
 	"error-log": "",
 	
 	"db-url": "psycopg2://txsftp:yuCrydCa@localhost/txsftp",
 	
-	"public-key": "id_rsa.pub",
-	"private-key": "id_rsa",
+	"ssh-public-key": "id_rsa.pub",
+	"ssh-private-key": "id_rsa",
 	
 	"suppress-deprecation-warnings": false
 }
