@@ -17,6 +17,42 @@ from zope.interface import implements
 from twisted.conch import unix
 from twisted.conch.ssh import filetransfer
 from twisted.python.filepath import FilePath, InsecurePath
+from twisted.conch.ssh.filetransfer import FXF_READ, FXF_WRITE, FXF_APPEND, FXF_CREAT, FXF_TRUNC, FXF_EXCL
+
+UPLOAD_TYPES = (
+	'write-only',
+	'create',
+)
+
+DOWNLOAD_TYPES = (
+	'read-only',
+)
+
+def detect_transfer_type(flags):
+	if([x for x in flags if x in UPLOAD_TYPES]):
+		return 'upload'
+	elif([x for x in flags if x in DOWNLOAD_TYPES]):
+		return 'download'
+	else:
+		raise RuntimeError('unexpected flagset: %s' % flags)
+
+def parse_flags(flags):
+	result = []
+	if flags & FXF_READ == FXF_READ and flags & FXF_WRITE == 0:
+		result.append('read-only')
+	if flags & FXF_WRITE == FXF_WRITE and flags & FXF_READ == 0:
+		result.append('write-only')
+	if flags & FXF_WRITE == FXF_WRITE and flags & FXF_READ == FXF_READ:
+		result.append('read-write')
+	if flags & FXF_APPEND == FXF_APPEND:
+		result.append('append')
+	if flags & FXF_CREAT == FXF_CREAT:
+		result.append('create')
+	if flags & FXF_TRUNC == FXF_TRUNC:
+		result.append('truncate')
+	if flags & FXF_EXCL == FXF_EXCL:
+		result.append('exclusive')
+	return result
 
 class EventedUnixSFTPFile(unix.UnixSFTPFile):
 	"""
@@ -25,12 +61,12 @@ class EventedUnixSFTPFile(unix.UnixSFTPFile):
 	def __init__(self, server, filename, flags, attrs):
 		unix.UnixSFTPFile.__init__(self, server, filename, flags, attrs)
 		self.filename = filename
-		self.flags = flags
+		self.flags = parse_flags(flags)
 		self.attrs = attrs
 		self.server.handleEvent('open', dict(
-			filename	= filename,
-			flags		= flags,
-			attrs		= attrs,
+			filename	= self.filename,
+			flags		= self.flags,
+			attrs		= self.attrs,
 		))
 	
 	def close(self):
