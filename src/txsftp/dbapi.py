@@ -20,6 +20,21 @@ async_pools = {}
 pools_lock = threading.BoundedSemaphore()
 
 RE_WS = re.compile(r'(\s+)?\t+(\s+)?')
+URL_REGEXP = r'(?P<scheme>[+a-z0-9]+)\:(\/\/)?'
+URL_REGEXP += r'((?P<user>\w+?)(\:(?P<passwd>\w+?))?\@)?'
+URL_REGEXP += r'(?P<host>[\._\-a-z0-9]+)(\:(?P<port>\d+)?)?'
+URL_REGEXP += r'(?P<path>/[^\s;?#]*)(;(?P<params>[^\s?#]*))?'
+URL_REGEXP += r'(\?(?P<query>[^\s#]*))?(\#(?P<fragment>[^\s]*))?'
+URL_RE = re.compile(URL_REGEXP, re.IGNORECASE)
+
+class URL(dict):
+	def __init__(self, source):
+		match = URL_RE.match(source)
+		self.update(match.groupdict())
+		self.source = str(source)
+	
+	def __str__(self):
+		return self.source
 
 def connect(db_urls=None, *args, **kwargs):
 	"""
@@ -43,11 +58,9 @@ def connect(db_urls=None, *args, **kwargs):
 	if not(isinstance(db_urls, tuple)):
 		db_urls = (db_urls,)
 	
-	from antioch import parser
-
 	replicated_pool = None
 	for db_url in db_urls:
-		dsn = parser.URL(db_url)
+		dsn = URL(db_url)
 		
 		if(dsn['scheme'] != 'psycopg2'):
 			raise RuntimeError("Only psyopg2 is supported for DB connections at this time.")

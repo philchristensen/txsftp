@@ -32,6 +32,8 @@ class UsernamePasswordChecker(object):
 	@defer.inlineCallbacks
 	def requestAvatarId(self, credentials):
 		result = yield self.db.runQuery('SELECT * FROM sftp_user WHERE username = %s', [credentials.username])
+		if not(result):
+			raise error.UnauthorizedLogin('Invalid login.')
 		validate = lambda p: crypt.crypt(credentials.password, p[0:2]) == p
 		if(result and validate(result[0]['password'])):
 			defer.returnValue(credentials.username)
@@ -55,6 +57,8 @@ class SSHKeyChecker(object):
 		
 		if keys.Key.fromString(credentials.blob).verify(credentials.signature, credentials.sigData):
 			result = yield self.db.runQuery('SELECT * FROM sftp_user WHERE username = %s', [credentials.username])
+			if not(result):
+				raise error.UnauthorizedLogin('Invalid login.')
 			try:
 				if(base64.decodestring(result[0]['ssh_public_key'].split()[1]) == credentials.blob):
 					defer.returnValue(credentials.username)

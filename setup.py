@@ -50,13 +50,6 @@ def autosetup():
 		
 		zip_safe		= False,
 		
-		install_requires = ['%s%s' % x for x in {
-			'twisted'			: ">=11.0",
-			'psycopg2'			: ">=2.4.1",
-			'simplejson'		: ">=2.1.1",
-			#'python-gnupg'		: ">=0.2.8",
-		}.items()],
-		
 		# metadata for upload to PyPI
 		author			= "Phil Christensen",
 		author_email	= "phil@bubblehouse.org",

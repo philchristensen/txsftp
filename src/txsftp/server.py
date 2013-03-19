@@ -137,7 +137,8 @@ class RestrictedSFTPServer:
 	def _childPath(self, path):
 		if path.startswith('/'):
 			path = '.' + path
-		return self.homedir.preauthChild(path)
+		result = self.homedir.preauthChild(path)
+		return result
 
 	def gotVersion(self, otherVersion, extData):
 		# we don't support anything extra beyond standard SFTP
@@ -219,4 +220,7 @@ class RestrictedSFTPServer:
 		# If it exists, it must be a real path, because we've disallowed
 		# creating symlinks!  So, we can just return the path as-is (after
 		# prefixing it with "." rather than self.homedir).
-		return '.' + path.path[len(self.homedir.path):]
+		new_path = path.path[len(self.homedir.path):]
+		if(new_path == ''):
+			return '/'
+		return '.' + new_path
