@@ -193,6 +193,8 @@ class RestrictedSFTPServer:
 			statFunc = os.stat
 		else:
 			statFunc = os.lstat
+		if("\x00" in path):
+			path, garbage = path.split("\x00", 1)
 		return self._getAttrs(statFunc(path))
 	
 	def setAttrs(self, path, attrs):
