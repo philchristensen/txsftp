@@ -1,4 +1,10 @@
 *.pyc
+__pycache__/
+*.egg-info/
+build/
+dist/
+.venv/
+node_modules/
+.env
+*.pid
 dropin.cache
-*.egg-info
-build

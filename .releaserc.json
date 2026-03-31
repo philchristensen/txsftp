@@ -1,0 +1,118 @@
+{
+  "branches": [
+    "main"
+  ],
+  "preset": "conventionalcommits",
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/changelog",
+    [
+      "@semantic-release/npm",
+      {
+        "npmPublish": false
+      }
+    ],
+    [
+      "semantic-release-replace-plugin",
+      {
+        "replacements": [
+          {
+            "files": [
+              "src/txsftp/__init__.py"
+            ],
+            "from": "__version__ = \".*\"",
+            "to": "__version__ = \"${nextRelease.version}\"",
+            "results": [
+              {
+                "file": "src/txsftp/__init__.py",
+                "hasChanged": true,
+                "numMatches": 1,
+                "numReplacements": 1
+              }
+            ],
+            "countMatches": true
+          },
+          {
+            "files": [
+              "pyproject.toml"
+            ],
+            "from": "^version = \".*\"",
+            "to": "version = \"${nextRelease.version}\"",
+            "results": [
+              {
+                "file": "pyproject.toml",
+                "hasChanged": true,
+                "numMatches": 1,
+                "numReplacements": 1
+              }
+            ],
+            "countMatches": true
+          },
+          {
+            "files": [
+              "Dockerfile"
+            ],
+            "from": "Version=\".*\"",
+            "to": "Version=\"${nextRelease.version}\"",
+            "results": [
+              {
+                "file": "Dockerfile",
+                "hasChanged": true,
+                "numMatches": 1,
+                "numReplacements": 1
+              }
+            ],
+            "countMatches": true
+          }
+        ]
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "uv build"
+      }
+    ],
+    [
+      "@alexbabel/semantic-release-docker",
+      {
+        "skipPublish": false,
+        "buildArgs": [
+          "--platform",
+          "linux/amd64,linux/arm64",
+          "--push",
+          "--provenance=false"
+        ]
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "Dockerfile",
+          "src/txsftp/__init__.py",
+          "pyproject.toml",
+          "package.json",
+          "package-lock.json",
+          "CHANGELOG.md"
+        ]
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "dist/txsftp-*.whl",
+            "label": "Python wheel"
+          },
+          {
+            "path": "dist/txsftp-*.tar.gz",
+            "label": "Source distribution"
+          }
+        ]
+      }
+    ]
+  ]
+}
