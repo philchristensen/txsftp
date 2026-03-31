@@ -1,4 +1,4 @@
-# antioch
+# txsftp
 # Copyright (c) 1999-2011 Phil Christensen
 #
 #
@@ -8,10 +8,8 @@
 JSON configuration file support.
 """
 
-import sys, os.path
-import pkg_resources as pkg
-
-import simplejson
+import sys, os.path, json
+import importlib.resources as pkg_res
 
 DEFAULT_CONF_PATH = '/etc/txsftp.json'
 
@@ -31,27 +29,30 @@ def get(key):
 def read_config(path):
 	result = {}
 
-	with pkg.resource_stream('txsftp.conf', 'default.json') as f:
+	ref = pkg_res.files('txsftp.conf').joinpath('default.json')
+	with ref.open('r', encoding='utf-8') as f:
 		result.update(_read_config(f))
 
-	if(pkg.resource_exists('txsftp.conf', 'local.json')):
-		print >>sys.stderr, "Loading local.json configuration..."
-		with pkg.resource_stream('txsftp.conf', 'local.json') as f:
+	local_ref = pkg_res.files('txsftp.conf').joinpath('local.json')
+	try:
+		with local_ref.open('r', encoding='utf-8') as f:
+			print("Loading local.json configuration...", file=sys.stderr)
 			result.update(_read_config(f))
+	except FileNotFoundError:
+		pass
 
 	if(os.path.exists(path)):
-		print >>sys.stderr, "Loading /etc/txsftp.json configuration..."
+		print("Loading %s configuration..." % path, file=sys.stderr)
 		with open(path) as f:
 			result.update(_read_config(f))
 
 	return result
 
 def _read_config(f):
-	with f:
-		try:
-			c = simplejson.load(f)
-		except Exception, e:
-			raise SyntaxError('%s: %s' % (path, e))
-		if(not isinstance(c, dict)):
-			raise SyntaxError("%s doesn't contain a single top-level object." % path)
-		return c
+	try:
+		c = json.load(f)
+	except Exception as e:
+		raise SyntaxError('config parse error: %s' % e)
+	if(not isinstance(c, dict)):
+		raise SyntaxError("config file doesn't contain a single top-level object.")
+	return c

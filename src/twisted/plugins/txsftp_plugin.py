@@ -12,7 +12,7 @@ This module adds a 'txsftp' server type to the twistd service list.
 
 import os, warnings
 
-from zope.interface import classProvides
+from zope.interface import provider
 
 from twisted import plugin
 from twisted.python import usage, log
@@ -30,12 +30,12 @@ from txsftp import conf, auth, dbapi, server
 from twisted.python import components
 components.registerAdapter(server.RestrictedSFTPServer, auth.VirtualizedConchUser, filetransfer.ISFTPServer)
 
-class txsftp_plugin(object):
+
+@provider(service.IServiceMaker, plugin.IPlugin)
+class txsftp_plugin:
 	"""
 	The txsftp application server startup class.
 	"""
-
-	classProvides(service.IServiceMaker, plugin.IPlugin)
 
 	tapname = "txsftp"
 	description = "Run a txsftp server."
@@ -55,14 +55,14 @@ class txsftp_plugin(object):
 		"""
 		if(conf.get('suppress-deprecation-warnings')):
 			warnings.filterwarnings('ignore', r'.*', DeprecationWarning)
-		
-		get_key = lambda path: Key.fromString(data=open(path).read())
+
+		get_key = lambda path: Key.fromString(data=open(path, 'rb').read())
 		ssh_public_key = get_key(conf.get('ssh-public-key'))
 		ssh_private_key = get_key(conf.get('ssh-private-key'))
 
 		factory = SSHFactory()
-		factory.privateKeys = {'ssh-rsa': ssh_private_key}
-		factory.publicKeys = {'ssh-rsa': ssh_public_key}
+		factory.privateKeys = {ssh_private_key.sshType(): ssh_private_key}
+		factory.publicKeys = {ssh_public_key.sshType(): ssh_public_key}
 
 		db = dbapi.connect(conf.get('db-url'))
 		factory.portal = Portal(auth.VirtualizedSSHRealm(db))

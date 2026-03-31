@@ -23,7 +23,7 @@ def pluginModules(moduleNames):
 			yield namedAny(moduleName)
 		except ImportError:
 			pass
-		except ValueError, ve:
+		except ValueError as ve:
 			if ve.args[0] != 'Empty module name':
 				import traceback
 				traceback.print_exc()
@@ -33,15 +33,14 @@ def pluginModules(moduleNames):
 
 def regeneratePluginCache():
 	pluginPackages = ['twisted.plugins']
-	
+
 	from twisted import plugin
-	
+
 	for pluginModule in pluginModules(pluginPackages):
 		plugin_gen = plugin.getPlugins(plugin.IPlugin, pluginModule)
 		try:
-			plugin_gen.next()
-		except StopIteration, e:
+			next(plugin_gen)
+		except StopIteration:
 			pass
-		except TypeError, e:
-			print 'TypeError: %s' % e
-
+		except TypeError as e:
+			print('TypeError: %s' % e)

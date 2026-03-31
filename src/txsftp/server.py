@@ -12,7 +12,7 @@ and they can't break out of it.
 """
 import os, errno
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from twisted.conch import unix
 from twisted.conch.ssh import filetransfer
@@ -68,7 +68,7 @@ class EventedUnixSFTPFile(unix.UnixSFTPFile):
 			flags		= self.flags,
 			attrs		= self.attrs,
 		))
-	
+
 	def close(self):
 		unix.UnixSFTPFile.close(self)
 		self.server.handleEvent('close', dict(
@@ -76,7 +76,7 @@ class EventedUnixSFTPFile(unix.UnixSFTPFile):
 			flags		= self.flags,
 			attrs		= self.attrs,
 		))
-	
+
 	def writeChunk(self, offset, data):
 		unix.UnixSFTPFile.writeChunk(self, offset, data)
 		self.server.handleEvent('writeChunk', dict(
@@ -84,7 +84,7 @@ class EventedUnixSFTPFile(unix.UnixSFTPFile):
 			offset		= offset,
 			data		= data,
 		))
-	
+
 	def readChunk(self, offset, length):
 		result = unix.UnixSFTPFile.readChunk(self, offset, length)
 		self.server.handleEvent('readChunk', dict(
@@ -99,10 +99,11 @@ class AbstractEventedFileTransferServer(filetransfer.FileTransferServer):
 		filetransfer.FileTransferServer.__init__(self, data, avatar)
 		for event, listener in self.getListenerDict().items():
 			self.client.addListener(event, listener)
-	
+
 	def getListenerDict(self):
 		raise NotImplementedError('AbstractEventedFileTransferServer::getListeners()')
 
+@implementer(filetransfer.ISFTPServer)
 class RestrictedSFTPServer:
 	"""
 	This is much like unix.SFTPServerForUnixConchUser, but:
@@ -114,8 +115,6 @@ class RestrictedSFTPServer:
 	#		restricted operations are attempted (they generally are sent as
 	#		"Failure").
 
-	implements(filetransfer.ISFTPServer)
-
 	def __init__(self, avatar):
 		self.listeners = {}
 		self.avatar = avatar
@@ -123,7 +122,7 @@ class RestrictedSFTPServer:
 		# Make the home dir if it doesn't already exist
 		try:
 			self.homedir.makedirs()
-		except OSError, e:
+		except OSError as e:
 			if e.errno != errno.EEXIST:
 				raise
 
@@ -135,6 +134,8 @@ class RestrictedSFTPServer:
 			listener(event, data)
 
 	def _childPath(self, path):
+		if isinstance(path, bytes):
+			path = path.decode('utf-8')
 		if path.startswith('/'):
 			path = '.' + path
 		result = self.homedir.preauthChild(path)
@@ -147,7 +148,7 @@ class RestrictedSFTPServer:
 	def extendedRequest(self, extendedName, extendedData):
 		# We don't implement any extensions to SFTP.
 		raise NotImplementedError
-	
+
 	def openFile(self, filename, flags, attrs):
 		return EventedUnixSFTPFile(self, self._childPath(filename).path, flags, attrs)
 
@@ -172,7 +173,7 @@ class RestrictedSFTPServer:
 
 	def _getAttrs(self, s):
 		"""Convert the result of os.stat/os.lstat to an SFTP attributes dict
-		
+
 		Ideally this would be named something more like _statToAttrs, but this
 		is required by UnixSFTPDirectory.
 		"""
@@ -183,8 +184,8 @@ class RestrictedSFTPServer:
 			"uid" : s.st_uid,
 			"gid" : s.st_gid,
 			"permissions" : s.st_mode,
-			"atime" : s.st_atime,
-			"mtime" : s.st_mtime
+			"atime" : int(s.st_atime),
+			"mtime" : int(s.st_mtime)
 		}
 
 	def getAttrs(self, path, followLinks):
@@ -196,7 +197,7 @@ class RestrictedSFTPServer:
 		if("\x00" in path):
 			path, garbage = path.split("\x00", 1)
 		return self._getAttrs(statFunc(path))
-	
+
 	def setAttrs(self, path, attrs):
 		path = self._childPath(path).path
 		# We ignore the uid and gid attributes!
@@ -212,7 +213,7 @@ class RestrictedSFTPServer:
 
 	def makeLink(self, linkPath, targetPath):
 		# We disallow symlinks entirely.
-		raise OSError, 'Permission denied'
+		raise OSError('Permission denied')
 
 	def realPath(self, path):
 		path = self._childPath(path)
