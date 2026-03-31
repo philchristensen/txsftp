@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "txsftp"
+version = "2.0.0"
+description = "A virtualized SFTP server backed by PostgreSQL"
+authors = [{ name = "Phil Christensen", email = "phil@bubblehouse.org" }]
+readme = "README.md"
+license = { file = "LICENSE.md" }
+requires-python = ">=3.13"
+dependencies = [
+    "Twisted[tls,conch]>=25.0.0",
+    "cryptography>=44.0.0",
+    "psycopg[binary]>=3.1.0",
+    "passlib>=1.7.4",
+    "zope.interface>=7.0.0",
+    "paramiko>=4.0.0",
+]
+
+[project.scripts]
+txsftp-setup = "txsftp.setup:regeneratePluginCache"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/txsftp", "src/twisted"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-twisted>=1.14.0",
+    "pytest-mock>=3.14.0",
+    "pytest-spec>=6.0.0",
+    "pytest-cov>=4.1.0",
+    "coverage>=7.4.4",
+    "ruff>=0.9.0",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+
+[tool.coverage.run]
+source = ["txsftp"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.pytest.ini_options]
+addopts = "--spec --cov=txsftp --cov-report=term-missing"
+spec_test_format = "{result} {docstring_summary}"
+markers = [
+    "twisted: mark test as requiring the Twisted reactor (handled by pytest-twisted)",
+]
