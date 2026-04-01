@@ -1,133 +1,118 @@
 """
-Tests for txsftp.dbapi — URL parsing and ReplicatedConnectionPool routing.
+Tests for txsftp.dbapi — URL conversion and TxPool async pool.
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from txsftp.dbapi import URL, ReplicatedConnectionPool
-
-
-# ---------------------------------------------------------------------------
-# URL parsing
-# ---------------------------------------------------------------------------
-
-def test_url_parses_scheme():
-    u = URL('psycopg://user:pass@host/dbname')
-    assert u['scheme'] == 'psycopg'
+from txsftp.dbapi import _url_to_conninfo, connect, TxPool
 
 
-def test_url_parses_legacy_psycopg2_scheme():
-    u = URL('psycopg2://user:pass@host/dbname')
-    assert u['scheme'] == 'psycopg2'
-
-
-def test_url_parses_user_password():
-    u = URL('psycopg://myuser:mysecret@dbhost/mydb')
-    assert u['user'] == 'myuser'
-    assert u['passwd'] == 'mysecret'
-    assert u['host'] == 'dbhost'
-    assert u['path'] == '/mydb'
-
-
-def test_url_str_roundtrip():
-    src = 'psycopg://txsftp:txsftp@localhost/txsftp'
-    assert str(URL(src)) == src
-
-
-def test_url_parses_port():
-    u = URL('psycopg://user:pass@host:5433/db')
-    assert u['port'] == '5433'
+def async_cm(return_value):
+    """Build a MagicMock that acts as an async context manager yielding return_value."""
+    cm = MagicMock()
+    cm.__aenter__ = AsyncMock(return_value=return_value)
+    cm.__aexit__ = AsyncMock(return_value=False)
+    return cm
 
 
 # ---------------------------------------------------------------------------
-# ReplicatedConnectionPool — query routing
+# URL conversion
 # ---------------------------------------------------------------------------
 
-def make_mock_pool(name='pool'):
-    pool = MagicMock()
-    pool.connkw = {'host': name}
-    return pool
+def test_url_converts_psycopg_scheme():
+    assert _url_to_conninfo('psycopg://user:pass@host/db') == 'postgresql://user:pass@host/db'
 
 
-def test_replicated_select_goes_to_slave():
-    master = make_mock_pool('master')
-    slave = make_mock_pool('slave')
-
-    rp = ReplicatedConnectionPool(master, write_only_master=True)
-    rp.add_slave(slave)
-
-    result = rp.getPoolFor('SELECT * FROM sftp_user')
-    assert result is slave
+def test_url_converts_psycopg2_scheme():
+    assert _url_to_conninfo('psycopg2://user:pass@host/db') == 'postgresql://user:pass@host/db'
 
 
-def test_replicated_insert_goes_to_master():
-    master = make_mock_pool('master')
-    slave = make_mock_pool('slave')
-
-    rp = ReplicatedConnectionPool(master, write_only_master=True)
-    rp.add_slave(slave)
-
-    result = rp.getPoolFor('INSERT INTO sftp_user VALUES (...)')
-    assert result is master
+def test_url_preserves_port():
+    assert _url_to_conninfo('psycopg://user:pass@host:5433/db') == 'postgresql://user:pass@host:5433/db'
 
 
-def test_replicated_update_goes_to_master():
-    master = make_mock_pool('master')
-    rp = ReplicatedConnectionPool(master, write_only_master=True)
-    result = rp.getPoolFor('UPDATE sftp_user SET last_login = NOW()')
-    assert result is master
-
-
-def test_replicated_no_slaves_falls_back_to_master():
-    master = make_mock_pool('master')
-    rp = ReplicatedConnectionPool(master, write_only_master=True)
-    # No slaves added → getSlave() returns master
-    assert rp.getSlave() is master
-
-
-def test_replicated_master_included_in_slaves_by_default():
-    """When write_only_master=False (default), master is also a slave."""
-    master = make_mock_pool('master')
-    rp = ReplicatedConnectionPool(master)
-    assert master in rp.slaves
-
-
-def test_replicated_write_only_master_excluded_from_slaves():
-    master = make_mock_pool('master')
-    rp = ReplicatedConnectionPool(master, write_only_master=True)
-    assert master not in rp.slaves
-
-
-def test_replicated_add_slave_no_duplicates():
-    master = make_mock_pool('master')
-    slave = make_mock_pool('slave')
-    rp = ReplicatedConnectionPool(master, write_only_master=True)
-    rp.add_slave(slave)
-    rp.add_slave(slave)  # second add should be a no-op
-    assert rp.slaves.count(slave) == 1
-
-
-def test_replicated_create_temporary_table_goes_to_slave():
-    master = make_mock_pool('master')
-    slave = make_mock_pool('slave')
-    rp = ReplicatedConnectionPool(master, write_only_master=True)
-    rp.add_slave(slave)
-    result = rp.getPoolFor('CREATE TEMPORARY TABLE tmp AS SELECT 1')
-    assert result is slave
+def test_url_preserves_credentials():
+    result = _url_to_conninfo('psycopg://txsftp:txsftp@localhost/txsftp')
+    assert result == 'postgresql://txsftp:txsftp@localhost/txsftp'
 
 
 # ---------------------------------------------------------------------------
-# URL scheme validation in connect()
+# Scheme validation
 # ---------------------------------------------------------------------------
 
 def test_connect_rejects_unsupported_scheme():
-    from txsftp.dbapi import connect
     with pytest.raises(RuntimeError, match="Only psycopg"):
         connect('mysql://user:pass@host/db')
 
 
-def test_connect_rejects_list_input():
-    from txsftp.dbapi import connect
-    with pytest.raises(ValueError, match="tuple"):
-        connect(['psycopg://a:b@h/d', 'psycopg://a:b@h/d'])
+def test_tx_pool_rejects_unsupported_scheme():
+    with pytest.raises(RuntimeError, match="Only psycopg"):
+        with patch('txsftp.dbapi.AsyncConnectionPool'):
+            TxPool('mysql://user:pass@host/db')
+
+
+# ---------------------------------------------------------------------------
+# TxPool async methods
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def tx_pool(mocker):
+    mock_pool_class = mocker.patch('txsftp.dbapi.AsyncConnectionPool')
+    # open() is awaited via run_until_complete() in __init__ — must be a coroutine
+    mock_pool_class.return_value.open = AsyncMock()
+    # Provide a mock event loop so TxPool.__init__ doesn't need a real one
+    mock_loop = MagicMock()
+    mocker.patch('asyncio.get_event_loop', return_value=mock_loop)
+    pool = TxPool('psycopg://user:pass@host/db')
+    # connection() is called synchronously and returns an async CM — use MagicMock
+    pool._pool = MagicMock()
+    return pool
+
+
+@pytest.mark.twisted
+async def test_run_query_returns_list_of_dicts(tx_pool):
+    """runQuery returns rows as a list of dicts."""
+    expected = [{'id': 1, 'username': 'alice'}]
+    mock_cur = AsyncMock()
+    mock_cur.fetchall.return_value = expected
+    mock_conn = MagicMock()
+    mock_conn.cursor.return_value = async_cm(mock_cur)
+    tx_pool._pool.connection.return_value = async_cm(mock_conn)
+
+    result = await tx_pool._run_query('SELECT * FROM sftp_user WHERE username = %s', ['alice'])
+
+    assert result == expected
+    mock_cur.execute.assert_awaited_once_with(
+        'SELECT * FROM sftp_user WHERE username = %s', ['alice']
+    )
+
+
+@pytest.mark.twisted
+async def test_run_operation_executes_query(tx_pool):
+    """runOperation executes without returning rows."""
+    mock_cur = AsyncMock()
+    mock_conn = MagicMock()
+    mock_conn.cursor.return_value = async_cm(mock_cur)
+    tx_pool._pool.connection.return_value = async_cm(mock_conn)
+
+    await tx_pool._run_operation(
+        'INSERT INTO sftp_user (username) VALUES (%s)', ['bob']
+    )
+
+    mock_cur.execute.assert_awaited_once_with(
+        'INSERT INTO sftp_user (username) VALUES (%s)', ['bob']
+    )
+
+
+@pytest.mark.twisted
+async def test_run_interaction_passes_connection(tx_pool):
+    """runInteraction passes the AsyncConnection to the callable."""
+    mock_conn = AsyncMock()
+    tx_pool._pool.connection.return_value = async_cm(mock_conn)
+
+    async def my_interaction(conn):
+        return 'result'
+
+    result = await tx_pool._run_interaction(my_interaction)
+    assert result == 'result'

@@ -12,6 +12,9 @@ This module adds a 'txsftp' server type to the twistd service list.
 
 import os, warnings
 
+from twisted.internet import asyncioreactor
+asyncioreactor.install()
+
 from zope.interface import provider
 
 from twisted import plugin
