@@ -35,7 +35,7 @@ RUN --mount=type=cache,target=/root/.cache \
     uv sync --frozen --no-editable --no-dev
 
 # Regenerate the Twisted plugin cache so twistd finds the txsftp plugin
-RUN /usr/app/bin/python -c "from txsftp import setup; setup.regeneratePluginCache()"
+RUN /usr/app/bin/python /usr/app/src/scripts/regenerate_plugin_cache.py
 
 
 FROM python:3.13-slim

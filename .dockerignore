@@ -1,6 +1,7 @@
 *
 !LICENSE.md
 !scripts/upsert_user.py
+!scripts/regenerate_plugin_cache.py
 !scripts/entrypoint.sh
 !src
 !pyproject.toml

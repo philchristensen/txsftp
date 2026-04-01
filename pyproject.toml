@@ -19,8 +19,6 @@ dependencies = [
     "paramiko>=4.0.0",
 ]
 
-[project.scripts]
-txsftp-setup = "txsftp.setup:regeneratePluginCache"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/txsftp", "src/twisted"]
