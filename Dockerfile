@@ -61,7 +61,9 @@ RUN useradd -r -d /usr/app -s /bin/false txsftp \
 
 COPY --from=builder /usr/app /usr/app
 
-COPY docker/entrypoint.sh /entrypoint.sh
+WORKDIR /usr/app/src
+
+COPY scripts/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Runtime configuration — override via docker-compose environment or -e flags.

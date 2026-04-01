@@ -54,8 +54,8 @@ Adding users
 Use the provided script (run inside the container or with DB env vars set):
 
 ```bash
-# Inside the container
-docker compose exec txsftp python /usr/app/src/scripts/add_user.py <username> <password> /data/sftp/<username>
+# Inside the container (home defaults to /data/sftp/<username>)
+docker compose run txsftp python scripts/upsert_user.py <username> <password>
 
 # Or via psql directly
 docker compose exec db psql -U txsftp -d txsftp

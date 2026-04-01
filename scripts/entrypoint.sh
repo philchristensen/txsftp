@@ -17,4 +17,8 @@ cat > /etc/txsftp.json <<EOF
 }
 EOF
 
-exec twistd --nodaemon --logfile=- --pidfile=/tmp/twistd.pid txsftp
+if [ "$1" = '' ]; then
+    exec twistd --nodaemon --logfile=- --pidfile=/tmp/twistd.pid txsftp
+else
+    exec "$@"
+fi

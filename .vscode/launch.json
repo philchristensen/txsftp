@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "SFTP Server",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "twisted",
+            "args": ["--nodaemon", "--logfile=-", "--pidfile=/tmp/twistd.pid", "txsftp"],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ]
+}

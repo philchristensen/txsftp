@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: txsftp
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U txsftp -d txsftp"]
       interval: 5s

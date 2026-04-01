@@ -1,0 +1,43 @@
+{
+	"name": "txsftp",
+	"dockerComposeFile": [
+		"../docker-compose.yml",
+		"../docker-compose.devcontainer.yml"
+	],
+	"mounts": [
+		"source=${localEnv:HOME}/.claude,target=/usr/app/.claude,type=bind,consistency=cached"
+	],
+	"containerEnv": {
+		"SHELL": "/bin/sh"
+	},
+	"remoteUser": "txsftp",
+	"service": "txsftp",
+	"workspaceFolder": "/usr/app/src",
+	"shutdownAction": "stopCompose",
+	"overrideCommand": true,
+	"otherPortsAttributes": { "onAutoForward": "ignore" },
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"python.defaultInterpreterPath": "/usr/app/bin/python",
+				"python.testing.unittestEnabled": false,
+				"python.testing.pytestEnabled": true,
+				"python.testing.pytestArgs": ["."],
+				"[python]": {
+					"editor.defaultFormatter": "charliermarsh.ruff",
+					"editor.formatOnSave": true,
+					"editor.codeActionsOnSave": {
+						"source.organizeImports": "explicit"
+					}
+				}
+			},
+			"extensions": [
+				"ms-python.debugpy",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"charliermarsh.ruff",
+				"DavidAnson.vscode-markdownlint"
+			]
+		}
+	}
+}

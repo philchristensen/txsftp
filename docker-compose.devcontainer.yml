@@ -1,0 +1,6 @@
+---
+# Used by the VS Code devcontainer to keep the txsftp service alive
+# without starting the SFTP server (the launch config does that instead).
+services:
+  txsftp:
+    command: /bin/sh -c "while sleep 1000; do :; done"

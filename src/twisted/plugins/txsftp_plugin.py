@@ -33,40 +33,40 @@ components.registerAdapter(server.RestrictedSFTPServer, auth.VirtualizedConchUse
 
 @provider(service.IServiceMaker, plugin.IPlugin)
 class txsftp_plugin:
-	"""
-	The txsftp application server startup class.
-	"""
+    """
+    The txsftp application server startup class.
+    """
 
-	tapname = "txsftp"
-	description = "Run a txsftp server."
+    tapname = "txsftp"
+    description = "Run a txsftp server."
 
-	class options(usage.Options):
-		"""
-		Implement option-parsing for the txsftp twistd plugin.
-		"""
-		optParameters = [
-			["conf", "f", "/etc/txsftp.json", "Path to configuration file, if any.", str],
-		]
+    class options(usage.Options):
+        """
+        Implement option-parsing for the txsftp twistd plugin.
+        """
+        optParameters = [
+            ["conf", "f", "/etc/txsftp.json", "Path to configuration file, if any.", str],
+        ]
 
-	@classmethod
-	def makeService(cls, config):
-		"""
-		Create the txsftp service.
-		"""
-		if(conf.get('suppress-deprecation-warnings')):
-			warnings.filterwarnings('ignore', r'.*', DeprecationWarning)
+    @classmethod
+    def makeService(cls, config):
+        """
+        Create the txsftp service.
+        """
+        if(conf.get('suppress-deprecation-warnings')):
+            warnings.filterwarnings('ignore', r'.*', DeprecationWarning)
 
-		get_key = lambda path: Key.fromString(data=open(path, 'rb').read())
-		ssh_public_key = get_key(conf.get('ssh-public-key'))
-		ssh_private_key = get_key(conf.get('ssh-private-key'))
+        get_key = lambda path: Key.fromString(data=open(path, 'rb').read())
+        ssh_public_key = get_key(conf.get('ssh-public-key'))
+        ssh_private_key = get_key(conf.get('ssh-private-key'))
 
-		factory = SSHFactory()
-		factory.privateKeys = {ssh_private_key.sshType(): ssh_private_key}
-		factory.publicKeys = {ssh_public_key.sshType(): ssh_public_key}
+        factory = SSHFactory()
+        factory.privateKeys = {ssh_private_key.sshType(): ssh_private_key}
+        factory.publicKeys = {ssh_public_key.sshType(): ssh_public_key}
 
-		db = dbapi.connect(conf.get('db-url'))
-		factory.portal = Portal(auth.VirtualizedSSHRealm(db))
-		factory.portal.registerChecker(auth.UsernamePasswordChecker(db))
-		factory.portal.registerChecker(auth.SSHKeyChecker(db))
+        db = dbapi.connect(conf.get('db-url'))
+        factory.portal = Portal(auth.VirtualizedSSHRealm(db))
+        factory.portal.registerChecker(auth.UsernamePasswordChecker(db))
+        factory.portal.registerChecker(auth.SSHKeyChecker(db))
 
-		return internet.TCPServer(conf.get('sftp-port'), factory)
+        return internet.TCPServer(conf.get('sftp-port'), factory)
