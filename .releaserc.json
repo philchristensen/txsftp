@@ -71,19 +71,8 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "uv build"
-      }
-    ],
-    [
-      "@alexbabel/semantic-release-docker",
-      {
-        "skipPublish": false,
-        "buildArgs": [
-          "--platform",
-          "linux/amd64,linux/arm64",
-          "--push",
-          "--provenance=false"
-        ]
+        "prepareCmd": "uv build",
+        "publishCmd": "docker buildx imagetools create -t ghcr.io/philchristensen/txsftp:${nextRelease.version} -t ghcr.io/philchristensen/txsftp:latest ghcr.io/philchristensen/txsftp:sha-$IMAGE_SHA-amd64 ghcr.io/philchristensen/txsftp:sha-$IMAGE_SHA-arm64"
       }
     ],
     [
