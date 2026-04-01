@@ -1,8 +1,8 @@
 {
 	"name": "txsftp",
 	"dockerComposeFile": [
-		"../docker-compose.yml",
-		"../docker-compose.devcontainer.yml"
+		"../compose.yaml",
+		"../compose.devcontainer.yaml"
 	],
 	"mounts": [
 		"source=${localEnv:HOME}/.claude,target=/usr/app/.claude,type=bind,consistency=cached"
