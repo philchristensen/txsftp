@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "txsftp"
-version = "3.1.0"
+version = "3.2.0"
 description = "A virtualized SFTP server backed by PostgreSQL"
 authors = [{ name = "Phil Christensen", email = "phil@bubblehouse.org" }]
 readme = "README.md"

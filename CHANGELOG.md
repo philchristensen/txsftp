@@ -1,3 +1,9 @@
+## [3.2.0](https://github.com/philchristensen/txsftp/compare/v3.1.0...v3.2.0) (2026-04-01)
+
+### Features
+
+* implemented last_connect/logout timestamps ([3a0bdf8](https://github.com/philchristensen/txsftp/commit/3a0bdf8f4dce6b94f5779096f5ed70c82625e884))
+
 ## [3.1.0](https://github.com/philchristensen/txsftp/compare/v3.0.0...v3.1.0) (2026-04-01)
 
 ### Features

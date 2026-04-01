@@ -40,7 +40,7 @@ RUN /usr/app/bin/python /usr/app/src/scripts/regenerate_plugin_cache.py
 
 FROM python:3.13-slim
 
-LABEL Version="3.1.0"
+LABEL Version="3.2.0"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends openssh-client libpq5 \
