@@ -1,3 +1,15 @@
+## [3.1.0](https://github.com/philchristensen/txsftp/compare/v3.0.0...v3.1.0) (2026-04-01)
+
+### Features
+
+* replace home-grown dbapi with community-created one ([ad31986](https://github.com/philchristensen/txsftp/commit/ad3198686ad723bdeae972d4abe3a4344d0ad75e))
+
+### Bug Fixes
+
+* first real release ([22336be](https://github.com/philchristensen/txsftp/commit/22336be164ea4e50e61716c9b10ce2e59998d84a))
+* lodash issue ([9cc17a6](https://github.com/philchristensen/txsftp/commit/9cc17a648083c70b1663bf728b2bd2d96baddd16))
+* remove setup script from main source ([1f0e435](https://github.com/philchristensen/txsftp/commit/1f0e435583ff8218d077e886fbf65cd5e9936b65))
+
 ## 1.0.0 (2026-04-01)
 
 ### Features

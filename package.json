@@ -1,6 +1,6 @@
 {
   "name": "txsftp",
-  "version": "1.0.0",
+  "version": "3.1.0",
   "description": "A virtualized SFTP server backed by PostgreSQL",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
