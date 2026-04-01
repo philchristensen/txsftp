@@ -56,6 +56,7 @@ def fake_db(sample_user_row):
         return defer.succeed([])
 
     db.runQuery.side_effect = _run_query
+    db.runOperation.return_value = defer.succeed(None)
     return db
 
 

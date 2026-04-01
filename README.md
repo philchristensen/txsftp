@@ -87,4 +87,5 @@ See [`docker/init.sql`](docker/init.sql) for the full schema. The core table is 
 | `password` | varchar | DES crypt hash (nullable — disables password auth) |
 | `ssh_public_key` | text | OpenSSH public key string (nullable) |
 | `home_directory` | varchar | Absolute path, auto-created on first login |
-| `last_login` / `last_logout` | timestamp | Not currently updated by the server |
+| `last_login` | timestamp | Set to `NOW()` on each successful authentication |
+| `last_logout` | timestamp | Set to `NOW()` when the session is closed |

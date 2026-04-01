@@ -102,14 +102,18 @@ class VirtualizedSSHRealm(unix.UnixSSHRealm):
         result = yield self.db.runQuery(
             'SELECT * FROM sftp_user WHERE username = %s', [username]
         )
-        user = VirtualizedConchUser(**result[0])
+        user = VirtualizedConchUser(self.db, **result[0])
         os.makedirs(user.getHomeDir(), exist_ok=True)
+        yield self.db.runOperation(
+            'UPDATE sftp_user SET last_login = NOW() WHERE username = %s', [username]
+        )
         return (interfaces[0], user, user.logout)
 
 
 class VirtualizedConchUser(avatar.ConchUser):
-    def __init__(self, **attribs: Any) -> None:
+    def __init__(self, db: Any, **attribs: Any) -> None:
         avatar.ConchUser.__init__(self)
+        self.db = db
         self.attribs = attribs
         self.channelLookup.update({b"session": session.SSHSession})
 
@@ -138,8 +142,12 @@ class VirtualizedConchUser(avatar.ConchUser):
     def global_cancel_tcpip_forward(self, data: bytes) -> int:
         return 0
 
-    def logout(self) -> None:
+    def logout(self) -> Any:
         log.msg('avatar %s logging out' % self.attribs['username'])
+        return self.db.runOperation(
+            'UPDATE sftp_user SET last_logout = NOW() WHERE username = %s',
+            [self.attribs['username']],
+        )
 
     def _runAsUser(self, f: Any, *args: Any, **kw: Any) -> Any:
         warnings.warn('_runAsUser not implemented')

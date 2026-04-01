@@ -181,6 +181,39 @@ def test_realm_returns_virtualized_user(fake_db):
 
 
 @pytest.mark.twisted
+def test_realm_sets_last_login(fake_db):
+    """requestAvatar updates last_login in the database."""
+    from twisted.conch import interfaces as conch_ifaces
+
+    realm = VirtualizedSSHRealm(fake_db)
+
+    with patch('txsftp.auth.conf') as mock_conf, patch('txsftp.auth.os.makedirs'):
+        mock_conf.get.return_value = 'default'
+        d = realm.requestAvatar('testuser', None, conch_ifaces.IConchUser)
+
+        @d.addCallback
+        def check(result):
+            calls = [str(c) for c in fake_db.runOperation.call_args_list]
+            assert any('last_login' in c for c in calls)
+
+        return d
+
+
+@pytest.mark.twisted
+def test_logout_sets_last_logout(fake_db, sample_user_row):
+    """logout() updates last_logout in the database."""
+    from txsftp.auth import VirtualizedConchUser
+
+    with patch('txsftp.auth.conf') as mock_conf:
+        mock_conf.get.return_value = 'default'
+        user = VirtualizedConchUser(fake_db, **sample_user_row)
+        user.logout()
+
+    calls = [str(c) for c in fake_db.runOperation.call_args_list]
+    assert any('last_logout' in c for c in calls)
+
+
+@pytest.mark.twisted
 def test_realm_decodes_bytes_username(fake_db):
     """Bytes username is decoded before the DB query."""
     from twisted.conch import interfaces as conch_ifaces
