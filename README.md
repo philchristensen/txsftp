@@ -79,7 +79,7 @@ uv run twistd -n txsftp  # requires a running PostgreSQL and /etc/txsftp.json
 Schema
 ------
 
-See [`docker/init.sql`](docker/init.sql) for the full schema. The core table is `sftp_user`:
+See [`scripts/init.sql`](scripts/init.sql) for the full schema. The core table is `sftp_user`:
 
 | Column | Type | Description |
 |---|---|---|
